@@ -1,0 +1,6 @@
+C:\Users\David\Documents\DiGraph\DiGraph\bin\Debug\DiGraph.exe.config
+C:\Users\David\Documents\digraph\DiGraph\bin\Debug\DiGraph.exe
+C:\Users\David\Documents\digraph\DiGraph\bin\Debug\DiGraph.pdb
+C:\Users\David\Documents\digraph\DiGraph\obj\Debug\DiGraph.csprojResolveAssemblyReference.cache
+C:\Users\David\Documents\digraph\DiGraph\obj\Debug\DiGraph.exe
+C:\Users\David\Documents\digraph\DiGraph\obj\Debug\DiGraph.pdb
