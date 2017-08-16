@@ -10,7 +10,8 @@ namespace DiGraph
     { // 判断图是否有环  
 
         private bool[] inStack;
-        private List<Stack<int>> cycleList;
+        private List<Stack<Vertex>> cycleList;//电流环
+        private List<Stack<int>> cycleList2;//普通环
         private int[] edgeTo;
         private bool[] isMarked;
 
@@ -18,7 +19,8 @@ namespace DiGraph
         {
             inStack = new bool[g.getVetx()];
             edgeTo = new int[g.getVetx()];
-            cycleList =new List<Stack<int>>();
+            cycleList =new List<Stack<Vertex>>();
+            cycleList2 = new List<Stack<int>>();
             isMarked = new bool[g.getVetx()];
             for (int i = 0; i < g.getVetx(); i++)
             {
@@ -33,7 +35,7 @@ namespace DiGraph
             inStack = new bool[g.getV()];
             edgeTo = new int[g.getV()];
             isMarked = new bool[g.getV()];
-            cycleList = new List<Stack<int>>();
+            cycleList = new List<Stack<Vertex>>();
             for (int i = 0; i < g.getV(); i++)
             {
                 if (!isMarked[i])
@@ -60,13 +62,16 @@ namespace DiGraph
                 else if (inStack[node])
                 { // 如果当前路径Stack中含有node，又再次访问的话，说明有环  
                   // 将环保存下来  
-                    Stack<int> cycle = new Stack<int>();
+                    Stack<Vertex> cycle = new Stack<Vertex>();
                     for (int i = begin; i != node; i = edgeTo[i])
                     {
-                        cycle.Push(i);
+                        cycle.Push(g.getVetrx(i));
+                        Console.Write("访问环点：" + i + " ");
                     }
-                    cycle.Push(node);
-                    cycle.Push(begin);
+                    cycle.Push(g.getVetrx(node));
+                    Console.Write("访问环点：" + node + " ");
+                    //   cycle.Push(g.getVetrx(begin));
+
                     cycleList.Add(cycle);
                 }
             }
@@ -94,8 +99,8 @@ namespace DiGraph
                         cycle.Push(i);
                     }
                     cycle.Push(nodeValue);
-                    cycle.Push(begin);
-                    cycleList.Add(cycle);
+                    //cycle.Push(begin);
+                    cycleList2.Add(cycle);
                 }
             }
             inStack[begin] = false;
@@ -103,13 +108,12 @@ namespace DiGraph
 
         public bool hasCycle()
         {
-           
             return cycleList!=null;
         }
 
         public List<Stack<int>> getCycle()
-        {
-            return cycleList;
+        {//返回普通环
+            return cycleList2;
         }
         public String toString()
         {
@@ -119,7 +123,7 @@ namespace DiGraph
             {
                 for (int j = 0; j < cycleList[i].Count; j++)
                 {
-                    sb.Append(cycleList[i].ElementAt(j) + "————>");
+                    sb.Append(cycleList[i].ElementAt(j).i + "————>");
                 }
                 sb.Append("\n");
             }
@@ -127,25 +131,76 @@ namespace DiGraph
             return sb.ToString();
         }
         /// <summary>
-        /// 设计思路：查共有节点，从共有节点开始遍历环路。所有环路
+        /// 设计思路：
+        /// 找出所有连接电池的环
         /// </summary>
         /// <param name="g"></param>
         /// <param name="battery"></param>
         public void Generation(EdgeWeightDiGraph g, Vertex battery)
         {//计算电路，为了方便直接给出电池在哪.为了方便暂定电池只有一个
-            bool[] isbinglian = new bool[cycleList.Count];
-            int falseCount = 0;
-            for (int i = 0; i < cycleList.Count; i++)
-            {
-                if (!cycleList[i].Contains(battery.i))
-                    falseCount++;
-                if (falseCount == cycleList.Count - 1)
-                {
-                    Console.Write("断路，不计算");
-                    return;
+            if (CheckLinked(battery)) {
+                Voltage = battery.Voltage;//电池的电压为总电压
+                if (cycleList.Count == 1)
+                {//串联
+                    Console.Write("电路为串联");
+                    for (int i = 0; i < cycleList[0].Count-1; i++)
+                    {
+                        AllResistance += cycleList[0].ElementAt(i).Resistance;
+                    }
+                    if (AllResistance == 0)
+                    {
+                        Console.WriteLine("短路了");
+                        return;
+                    } 
+                    Eletry = Voltage / AllResistance;
+                    SetEle(g, cycleList[0], Eletry);
+                    Console.WriteLine("总电阻为:"+AllResistance);
+                }
+                else {
+                    Console.Write("并联，算法测试中……可能有bug");
+                    for (int i = 0; i < cycleList.Count; i++)
+                    {
+                       
+                    }
                 }
             }
         }
+        public void SetEle(EdgeWeightDiGraph g,Stack<Vertex> cycle,float electry) {//每圈分别设置电压，电流
+            for (int c = 0; c < cycle.Count-1; c++)
+            {
+                for (int i = 0; i < g.getV(); i++) {
+                    if (g.getVetrx(i) == cycle.ElementAt(c)) {
+                        g.getVetrx(i).Electricity = electry;
+                        if (g.getVetrx(i).Resistance != 0)//不是电线或者电池的情况下计算电压。
+                        {
+                            g.getVetrx(i).Voltage = electry * g.getVetrx(i).Resistance;
+                        }
+                        Console.WriteLine("发电中，元器件"+i+"电流为:"+electry+"电压为："+ g.getVetrx(i).Voltage);
+                        for (int j = 0; j < g.getVetrx(i).adj.Count; j++)
+                        {
+                            g.getVetrx(i).adj[j].Electricity = electry;
+                            
+                        }
+                    }
+            }
+            }
+        }
+        bool CheckLinked(Vertex battery)
+        {//检测断路
+            if (cycleList.Count > 0) { 
+                for (int i = 0; i < cycleList.Count; i++)
+                {
+                    if (CheckBattery(cycleList[i],battery))
+                        return true;
+                }
+            }
+            Console.WriteLine("断路！请链接电池！");
+            return false;
+        }
+        bool CheckBattery(Stack<Vertex> ring,Vertex battery) {
+            return ring.Contains(battery);
+        }
+        
         public float AllResistance;//总电阻
         public float Voltage;//总电压
         public float Eletry;//总电流

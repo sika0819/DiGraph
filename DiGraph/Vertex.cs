@@ -25,12 +25,7 @@ namespace DiGraph
                 e = value;
             }
         }//电流
-        public float Voltage
-        {//电压
-            get {
-                return r * e;
-            }
-        }
+        public float Voltage;
         public List<DirectedEdge> adj;//邻接表
         public Vertex() {
             adj = new List<DirectedEdge>();
